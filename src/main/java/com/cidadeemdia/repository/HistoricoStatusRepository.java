@@ -7,5 +7,7 @@ import java.util.List;
 
 public interface HistoricoStatusRepository extends JpaRepository<HistoricoStatus, Long> {
 
+    List<HistoricoStatus> findAllByOrderByDataDesc();
+
     List<HistoricoStatus> findByOcorrenciaIdOrderByDataDesc(Long ocorrenciaId);
 }

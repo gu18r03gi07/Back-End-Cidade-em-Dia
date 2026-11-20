@@ -45,6 +45,20 @@ Sem credenciais ou com credenciais inválidas: **401**. Autenticado sem permiss�
 
 Valores: urgência e prioridade `BAIXA|MEDIA|ALTA`; status `NOVA|EM_ANALISE|EM_ANDAMENTO|RESOLVIDA`.
 
+## Histórico de status
+
+| Método | Rota | Perfil | Respostas |
+|---|---|---|---|
+| POST | `/historicos-status` | ADMIN, ATENDENTE | 201, 400, 404, 409 |
+| GET | `/historicos-status` | autenticado | 200 |
+| GET | `/historicos-status/{id}` | autenticado | 200, 404 |
+| PUT | `/historicos-status/{id}` | ADMIN | 200, 400, 404, 409 |
+| DELETE | `/historicos-status/{id}` | ADMIN | 204, 404 |
+| GET | `/ocorrencias/{id}/historico` | autenticado | 200, 404 |
+
+O POST registra uma transição real de status da ocorrência informada e gera o histórico
+automaticamente. A atualização e exclusão de registros existentes são restritas ao ADMIN.
+
 ## Confirmações
 
 | Método | Rota | Perfil | Respostas |

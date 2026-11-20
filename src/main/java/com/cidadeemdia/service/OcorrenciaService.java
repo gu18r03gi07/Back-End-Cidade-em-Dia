@@ -1,6 +1,8 @@
 package com.cidadeemdia.service;
 
 import com.cidadeemdia.dto.AlterarStatusDTO;
+import com.cidadeemdia.dto.AtualizarHistoricoStatusDTO;
+import com.cidadeemdia.dto.CriarHistoricoStatusDTO;
 import com.cidadeemdia.dto.OcorrenciaDTO;
 import com.cidadeemdia.entity.Categoria;
 import com.cidadeemdia.entity.HistoricoStatus;
@@ -73,15 +75,60 @@ public class OcorrenciaService {
 
     public Ocorrencia atualizar(Long id, OcorrenciaDTO dto) {
         Ocorrencia ocorrencia = obterPorId(id);
+        Categoria categoria = categoriaService.obterPorId(dto.categoriaId());
+        if (!categoria.getAtiva() && !categoria.getId().equals(ocorrencia.getCategoria().getId())) {
+            throw new ViolacaoRegraNegocioException(
+                    "A categoria '" + categoria.getNome() + "' está inativa e não aceita novas ocorrências");
+        }
+
         preencher(ocorrencia, dto);
+        ocorrencia.setCategoria(categoria);
+        ocorrencia.setAutor(usuarioService.obterPorId(dto.autorId()));
         return repository.save(ocorrencia);
+    }
+
+    public List<HistoricoStatus> listarHistorico() {
+        return historicoRepository.findAllByOrderByDataDesc();
+    }
+
+    public HistoricoStatus obterHistoricoPorId(Long id) {
+        return historicoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Histórico " + id + " não encontrado"));
+    }
+
+    public HistoricoStatus criarHistorico(CriarHistoricoStatusDTO dto, String responsavel,
+                                          Usuario.Perfil perfil) {
+        Ocorrencia ocorrencia = obterPorId(dto.ocorrenciaId());
+        return registrarAlteracaoStatus(ocorrencia, dto.statusNovo(), dto.motivo(), responsavel, perfil);
+    }
+
+    public HistoricoStatus atualizarHistorico(Long id, AtualizarHistoricoStatusDTO dto) {
+        HistoricoStatus historico = obterHistoricoPorId(id);
+        if (dto.statusAnterior() == dto.statusNovo()) {
+            throw new ViolacaoRegraNegocioException("O histórico deve registrar uma mudança de status");
+        }
+
+        historico.setStatusAnterior(dto.statusAnterior());
+        historico.setStatusNovo(dto.statusNovo());
+        historico.setMotivo(dto.motivo());
+        return historicoRepository.save(historico);
+    }
+
+    public void excluirHistorico(Long id) {
+        historicoRepository.delete(obterHistoricoPorId(id));
     }
 
     // Funcionalidade específica do PI: andamento da ocorrência com histórico
     public Ocorrencia alterarStatus(Long id, AlterarStatusDTO dto, String responsavel, Usuario.Perfil perfil) {
         Ocorrencia ocorrencia = obterPorId(id);
+        registrarAlteracaoStatus(ocorrencia, dto.statusNovo(), dto.motivo(), responsavel, perfil);
+        return ocorrencia;
+    }
+
+    private HistoricoStatus registrarAlteracaoStatus(Ocorrencia ocorrencia, Ocorrencia.Status novo,
+                                                      String motivo, String responsavel,
+                                                      Usuario.Perfil perfil) {
         Ocorrencia.Status anterior = ocorrencia.getStatus();
-        Ocorrencia.Status novo = dto.statusNovo();
 
         // Regra de negócio: ocorrência resolvida está encerrada
         if (anterior == Ocorrencia.Status.RESOLVIDA) {
@@ -98,12 +145,10 @@ public class OcorrenciaService {
         historico.setOcorrencia(ocorrencia);
         historico.setStatusAnterior(anterior);
         historico.setStatusNovo(novo);
-        historico.setMotivo(dto.motivo());
+        historico.setMotivo(motivo);
         historico.setResponsavel(responsavel);
         historico.setPerfilResponsavel(perfil);
-        historicoRepository.save(historico);
-
-        return ocorrencia;
+        return historicoRepository.save(historico);
     }
 
     public void excluir(Long id) {
