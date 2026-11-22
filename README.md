@@ -7,9 +7,12 @@ Padrões de Desenvolvimento Web (Engenharia de Software, 4º termo).
 
 | Nome completo | ID acadêmico |
 |---|---|
-| _Preencher_ | _Preencher_ |
-| _Preencher_ | _Preencher_ |
-| _Preencher_ | _Preencher_ |
+| Kauan Ribeiro | 273006 |
+| Otávio Siqueira Freire dos Santos | 273524 |
+| Luiz Gustavo Legori Ramos | 273066 |
+| Marcos Vinicius Gonçalves Miotto | 272975 |
+| Pedro Henrique Cavalheiro Martins | 272747 |
+| Gustavo Rodrigues Giamarco | 272805 |
 
 ## Descrição
 
